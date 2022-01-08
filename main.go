@@ -4,19 +4,49 @@ import (
 	"fmt"
 	"log"
 
+	"os"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"github.com/typesense/typesense-go/typesense"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
 )
 
+type structFaker struct {
+	ID        string `faker:"uuid_digit"`
+	Name      string `faker:"name"`
+	Age       int    `faker:"oneof: 15, 27, 61"`
+	Country   string `faker:"oneof: USA, ID, AUS, GER, NED"`
+	Bio       string `faker:"paragraph"`
+	Religion  string `faker:"oneof: MOESLEM, CRIST, HINDU"`
+	Birthdate string `faker:"date"`
+}
+
+type structDocument struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Age       int    `json:"age"`
+	Country   string `json:"country"`
+	Bio       string `json:"bio"`
+	Religion  string `json:"religion"`
+	Birthdate string `json:"birthdate"`
+}
+
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	hostTypesense := os.Getenv("HOST_TYPESENSE")
+	apiKeyTypesense := os.Getenv("API_KEY_TYPESENSE")
 	app := fiber.New()
 
 	client := typesense.NewClient(
-		typesense.WithServer("http://localhost:8108"),
-		typesense.WithAPIKey("Hu52dwsas2AdxdE"))
+		typesense.WithServer(hostTypesense),
+		typesense.WithAPIKey(apiKeyTypesense))
 
 	schema := &api.CollectionSchema{
 		Name: "person",
@@ -28,6 +58,18 @@ func main() {
 			{
 				Name: "age",
 				Type: "int32",
+			},
+			{
+				Name: "bio",
+				Type: "string",
+			},
+			{
+				Name: "religion",
+				Type: "string",
+			},
+			{
+				Name: "birthdate",
+				Type: "string",
 			},
 			{
 				Name: "country",
@@ -56,11 +98,6 @@ func main() {
 			return c.SendString("Error search!")
 		}
 
-		fmt.Println(*results.Found)
-		fmt.Println(*results.OutOf)
-		fmt.Println(*results.Page)
-		fmt.Println(*results.SearchTimeMs)
-
 		defer func() {
 			hits := *results.Hits
 			for _, val := range hits {
@@ -73,25 +110,17 @@ func main() {
 
 	app.Post("/", func(c *fiber.Ctx) error {
 
-		documentFaker := struct {
-			ID      string `faker:"uuid_digit"`
-			Name    string `faker:"name"`
-			Age     int    `faker:"oneof: 15, 27, 61"`
-			Country string `faker:"oneof: USA, ID, AUS, GER, NED"`
-		}{}
-
+		documentFaker := structFaker{}
 		err := faker.FakeData(&documentFaker)
 
-		document := struct {
-			ID      string `json:"id"`
-			Name    string `json:"name"`
-			Age     int    `json:"age"`
-			Country string `json:"country"`
-		}{
-			ID:      documentFaker.ID,
-			Name:    documentFaker.Name,
-			Age:     documentFaker.Age,
-			Country: documentFaker.Country,
+		document := structDocument{
+			ID:        documentFaker.ID,
+			Name:      documentFaker.Name,
+			Age:       documentFaker.Age,
+			Country:   documentFaker.Country,
+			Bio:       documentFaker.Bio,
+			Religion:  documentFaker.Religion,
+			Birthdate: documentFaker.Birthdate,
 		}
 
 		if err != nil {

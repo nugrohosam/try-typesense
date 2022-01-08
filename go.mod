@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/bxcodec/faker/v3 v3.7.0
 	github.com/gofiber/fiber/v2 v2.24.0
+	github.com/joho/godotenv v1.4.0
 	github.com/typesense/typesense-go v0.4.0
 )
 
