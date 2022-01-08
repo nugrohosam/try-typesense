@@ -24,7 +24,7 @@ type structFaker struct {
 	Birthdate string `faker:"date"`
 }
 
-func (faker *structFaker) toDoc() interface{} {
+func (faker *structFaker) toJson() interface{} {
 	return struct {
 		ID        string `json:"id"`
 		Name      string `json:"name"`
@@ -122,7 +122,7 @@ func main() {
 
 		documentFaker := structFaker{}
 		err := faker.FakeData(&documentFaker)
-		document := documentFaker.toDoc()
+		document := documentFaker.toJson()
 
 		if err != nil {
 			fmt.Println(err)
