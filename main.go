@@ -24,14 +24,24 @@ type structFaker struct {
 	Birthdate string `faker:"date"`
 }
 
-type structDocument struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Age       int    `json:"age"`
-	Country   string `json:"country"`
-	Bio       string `json:"bio"`
-	Religion  string `json:"religion"`
-	Birthdate string `json:"birthdate"`
+func (faker *structFaker) toDoc() interface{} {
+	return struct {
+		ID        string `json:"id"`
+		Name      string `json:"name"`
+		Age       int    `json:"age"`
+		Country   string `json:"country"`
+		Bio       string `json:"bio"`
+		Religion  string `json:"religion"`
+		Birthdate string `json:"birthdate"`
+	}{
+		ID:        faker.ID,
+		Name:      faker.Name,
+		Age:       faker.Age,
+		Country:   faker.Country,
+		Bio:       faker.Bio,
+		Religion:  faker.Religion,
+		Birthdate: faker.Birthdate,
+	}
 }
 
 func main() {
@@ -82,7 +92,7 @@ func main() {
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		paramQ := c.Query("q", "Adam")
-		quereyBy := "name"
+		quereyBy := "name,birthdate,country,religion,bio"
 		sortBy := pointer.String("age:desc")
 
 		fmt.Println(paramQ)
@@ -112,16 +122,7 @@ func main() {
 
 		documentFaker := structFaker{}
 		err := faker.FakeData(&documentFaker)
-
-		document := structDocument{
-			ID:        documentFaker.ID,
-			Name:      documentFaker.Name,
-			Age:       documentFaker.Age,
-			Country:   documentFaker.Country,
-			Bio:       documentFaker.Bio,
-			Religion:  documentFaker.Religion,
-			Birthdate: documentFaker.Birthdate,
-		}
+		document := documentFaker.toDoc()
 
 		if err != nil {
 			fmt.Println(err)
